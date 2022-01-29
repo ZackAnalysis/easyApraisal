@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="easyApraisal",
-    version="0.1.1",
+    version="0.1.2",
     author="Zack Dai",
     author_email="zdai@brocku.ca",
     description="A package to scrape data from the easy appraisal",
