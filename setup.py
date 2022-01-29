@@ -17,5 +17,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     packages=setuptools.find_packages(),
+    include_package_data=True,
+    package_data={"": ["*.json", "*.xlsx"]},
     install_requires=['pandas','openpyxl','selenium','requests']
 )
