@@ -3,25 +3,28 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
+from webdriver_manager.chrome import ChromeDriverManager
 import time,re
 import json
 import pandas as pd
 import base64
 import importlib.resources as importlib_resources
 
+accounts = json.loads(importlib_resources.read_text('easyApraisal','account.json'))
+username = base64.b64decode(accounts['username'].encode()).decode()
+password = base64.b64decode(accounts['password'].encode()).decode()
 
 class Matrix():
-    def __init__(self, headless=False) -> None:
-        accounts = json.loads(importlib_resources.read_text('easyApraisal','account.json'))
-        self.username = base64.b64decode(accounts['username'].encode()).decode()
-        self.password = base64.b64decode(accounts['password'].encode()).decode()
+    def __init__(self,username=username, password=password, headless=False) -> None:
+        self.username = username
+        self.password = password
         self.niagara = accounts['niagara_url']
         self.headless = headless
         try:
             if self.headless:
                 chrome_options = Options()
                 chrome_options.add_argument("--headless")
-                self.driver = webdriver.Chrome(options=chrome_options)
+                self.driver = webdriver.Chrome(ChromeDriverManager().install())
             else:
                 self.driver = webdriver.Chrome()
         except Exception as e:
@@ -34,9 +37,11 @@ class Matrix():
         rulefile = importlib_resources.read_binary('easyApraisal','Output.xlsx')
         self.rules = pd.read_excel(rulefile, sheet_name='rules', usecols=['Name','Source','Xpaths','Notes'])
 
+    def testwiki(self, term):
+        self.driver.get(f'https://en.wikipedia.org/wiki/{term}')
+        return self.driver.page_source
 
     def login(self, site='niagara'):
-        
         if site == 'niagara':
             matrix_url = self.niagara
         self.driver.get(matrix_url)
@@ -98,6 +103,12 @@ class Matrix():
     def tranform(self):
         from easyApraisal.transforms import tranforms
         self.info = tranforms(self.info)
+
+    def to_dataframe(self):
+        infodf =pd.DataFrame([self.info]).T
+        infodf.columns = ['value']
+        infodf = self.rules.merge(infodf,left_on='Name', right_index=True,how='left')
+        return infodf
 
     def to_file(self, filename = None):
         from datetime import datetime
