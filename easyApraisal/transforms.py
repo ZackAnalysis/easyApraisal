@@ -1,13 +1,14 @@
 import re
 
 def addressHandel(info):
-    address = info.get('Street address','')
-    street = address.split(',')[0]
-    city = (address.split(',') + [''])[1]
+    address = info.get('Street address','').strip()
+    street = address.split(',')[0].strip()
+    city = (address.split(',') + [''])[1].strip()
     province = 'ON'
     postal = (['']+re.findall(r'[A-Z]\d[A-Z] \d[A-Z]\d',address.upper()))[-1]
-    city_province_postal = city + ', ON ' + postal
+    city_province_postal = 'NOTL' if 'Niagara on the Lake' else city + ', ON ' + postal
     info.update( {
+        'addressraw':address,
         'Street address':street,
         "City":city,
         "Province":province,
@@ -98,6 +99,35 @@ def garage(info):
     })
     return info
 
+def Propertytype(info):
+    propertytype = info.get('Property type','')
+    propertytype = (re.findall(r'is \'(.*)\'',propertytype) + [''])[0]
+    info.update( {
+        "Property type":propertytype
+    })
+    return info
+
+def driveway(info):
+    driveway = info.get('Driveway','')
+    material = (re.findall(r'(Wood|Concrete|Asphalt)',driveway, re.I) + [''])[0]
+    material = f' WIDTH MATERIAL {material}' if material else ''
+    width = len(re.findall(r'Attached|Detached',driveway, re.I))
+    if len(width) == 0:
+        width = ''
+    elif len(width) == 1:
+        width = 'Single'
+    elif len(width) == 2:
+        width = 'Double'
+    elif len(width) == 3:
+        width = 'Triple'
+    elif len(width) == 4:
+        width = 'Quad'
+    
+    info.update( {
+        "Driveway":width + material
+    })
+    return info
+
 def tranforms(info):
     info = addressHandel(info)
     info = agbeds(info)
@@ -109,6 +139,7 @@ def tranforms(info):
     info = dom(info)
     info = basement(info)
     info = garage(info)
+    info = Propertytype(info)
 
     return info
 

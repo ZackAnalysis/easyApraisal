@@ -6,6 +6,7 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
+
 @app.route('/', methods=['POST'])
 def index_post():
     from easyApraisal.Matrix import Matrix

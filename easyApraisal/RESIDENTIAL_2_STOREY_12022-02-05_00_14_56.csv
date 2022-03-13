@@ -1,0 +1,81 @@
+﻿"Submission Date",Date,"Address Map Locator",Address,Notes,"Type of inspection",City,"Other - please specify","Nature of district","Type of district","Trend of district","Built up","Detrimental conditions observed",Explain,"Age conformity","Condition conformity","Size conformity",Topography,Utility,Features,"Backing onto",Electrical,"Water supply","Property type","Building type",Style,Setting,"Common elements",Parking,"Carport width","Driveway width","Driveway material","Garage type","Garage panel (skip if none)",Windows,Roofing,"Roof condition","Roof condition comments","Exterior finish","Exterior finish condition","Exterior finish condition comments",Landscaping,"Landscaping explanation","Curb appeal","Curb appeal explanation","Exterior improvements front","Fence material","Exterior improvements rear","Fence material","Shed features","Shed electrical panel","Main entrances",Extras,"Overall condition","Floor Plan","Interior finish","Insulation AG",Closets,"Main ceiling","Main flooring","Main rooms","Bathroom - main","Bedroom - main","Crawl space - main","Den - main","Dining room - main","Family room - main","Foyer - main","Kitchen - main","Laundry - main","Living room - main","Mudroom - main","Utility room - main","Other room - main","Second entrances","Second ceiling","Second flooring","Second rooms","Bathroom - second","Bedroom - second","Crawl space - second","Den - second","Dining room - second","Family room - second","Foyer - second","Kitchen - second","Laundry - second","Living room - second","Mudroom - second","Utility room - second","Other room - second","Floor name","Extra level entrances","Extra level ceiling","Extra level flooring","Extra level rooms","Bathroom - extra level","Bedroom - extra level","Crawl space - extra level","Den - extra level","Dining room - extra level","Family room - extra level","Foyer - extra level","Kitchen - extra level","Laundry - extra level","Living room - extra level","Mudroom - extra level","Utility room - extra level","Other room - extra level",Basement,"Basement entrances","Basement insulation","Basement finish","Basement finish %","Basement ceiling","Basement flooring","Basement rooms","Bathroom - basement","Bedroom - basement","Crawl space - basement","Den - basement","Dining room - basement","Family room - basement","Foyer - basement","Kitchen - basement","Laundry - basement","Living room - basement","Mudroom - basement","Utility room - basement","Other room - basement",Construction,"Foundation walls",Plumbing,"Electrical panel",Amps,"Heating system","Fuel type","Water heater fuel",Capacity,Units,"Additional systems","Percent complete","Photos confirmation","Measurements confirmation"
+"2022/02/05 00:12:23","Feb 5, 2022",,"123 Zack Street","30'x62' outbuilding",Full,"St. Catharines",,Residential,Urban,Stable,"Over 75%",No,,Similar,Similar,Similar,Level,"Telephone
+Natural gas
+Storm sewer
+Sanitary sewer","Paved road
+Sidewalk
+Curbs
+Streetlights
+Cable television",Residential,Underground,Municipal,"Single family dwelling",Detached,"2 story",Interior,,"Driveway
+Garage",,Double,Concrete,"Double attached",60,PVC,"Asphalt shingle",Average,,"Stone veneer
+Stucco",Average,,Average,,Average,,"Landscaping
+Covered porch
+Sodded lawn",,"Gardens
+Covered patio
+Below ground pool
+Sodded lawn",,,,4,"Fireplace
+Garage opener
+Security system",Average,Average,"Drywall walls
+Drywall ceilings","Walls
+Ceiling",Average,Drywall,"E. wood","Bathroom
+Dining
+Foyer
+Kitchen
+Living","Pieces: 2, Ceiling: , Flooring: Ceramic tile, Windows: , Features: Recessed lights, Other: 
+",,,,"Ceiling: Textured, Flooring: , Windows: Windows, Closets: , Features: Pendant light
+Walkout, Other: 
+",,"Ceiling: , Flooring: Ceramic tile, Windows: Large windows, Closets: Closets, Features: Pendant light
+Vaulted ceiling, Other: 17' ceiling
+","Ceiling: , Flooring: Ceramic tile, Countertops: Granite, Cabinetry: Wood, Windows: Large window, Closets: Closet, Appliances: Built-in dishwasher
+Fridge
+Stove, Features: Island
+Pantry
+Recessed lights, Other: 
+",,"Ceiling: Textured, Flooring: , Windows: Windows incl bay window, Closets: , Features: Crown moulding
+Recessed lights, Other: 
+",,,,,,"E. wood","Bathroom
+Bedroom","Pieces: 6, Ceiling: , Flooring: Porcelain tile, Windows: Window, Features: Bidet
+Double vanity
+Free tub
+Quartz countertop
+Recessed lights
+Shower light
+Glass/tile shower, Other: 
+Pieces: 5, Ceiling: , Flooring: , Windows: , Features: Closet
+Double vanity
+Recessed lights
+Glass/tile shower, Other: En suite to bedroom 3
+","Ceiling: Textured, Flooring: , Windows: Window, Closets: Walk-in closet, Features: Recessed lights, Other: 
+Ceiling: , Flooring: , Windows: Window, Closets: Large closet, Features: Recessed lights, Other: 
+Ceiling: , Flooring: , Windows: Windows incl arch window, Closets: Walk-in closet, Features: Master
+En suite
+Crown moulding
+Fireplace
+Recessed lights, Other: 
+",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Full,1,Walls,"Fully finished",,Drywall,"Vinyl plank","Bathroom
+Bedroom
+Family
+Laundry
+Utility","Pieces: 4, Ceiling: , Flooring: Ceramic tile, Windows: Window, Features: Recessed lights, Other: 
+","Ceiling: , Flooring: Carpet, Windows: Window, Closets: Closet, Features: Recessed lights, Other: 
+",,,,"Ceiling: , Flooring: , Windows: Windows, Closets: Closet, Features: Bar
+Fireplace
+Recessed lights
+Wood paneling, Other: 
+",,,"Ceiling: , Flooring: , Cabinetry: Laminate, Windows: , Closets: , Features: Sink
+Unfinished, Other: 
+",,,"Ceiling: , Flooring: , Windows: , Closets: , Features: Electrical panel
+Furnace
+Heat recovery
+Sump pump
+Water heater
+Unfinished, Other: 
+",,Wood,"Poured concrete","ABS
+Copper
+PEX",Breakers,200,"Forced air",Gas,Tankless,,Litres,"Central air
+Central vac
+Heat recovery
+Sump pump",100,,"UNCHECKED: Subject
+UNCHECKED: Garage
+UNCHECKED: Outbuildings
+UNCHECKED: Site improvements"
