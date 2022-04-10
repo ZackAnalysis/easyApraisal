@@ -5,6 +5,7 @@
 #pip install pandas
 
 
+from lib2to3.pgen2 import driver
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -17,7 +18,7 @@ import json
 import pandas as pd
 import base64
 import importlib.resources as importlib_resources
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -28,10 +29,10 @@ warnings.filterwarnings("ignore")
 
 
 
-accounts= {"niagara_url":"https://matrix.itsorealestate.ca/"}
+accounts= {"niagara_url":"https://matrix.itsorealestate.ca/","hamilton_utl":"https://matrix.rahb.ca"}
 class Matrix():
     def __init__(self) -> None:
-        self.niagara = accounts['niagara_url']
+        self.baseurl = accounts['hamilton_utl']
         self.info = {
             'main':{},
             'comparable 1':{},
@@ -41,7 +42,7 @@ class Matrix():
             'comparable 5':{},
             'comparable 6':{}
         }
-        self.testmlsid = "40186898"
+        self.testmlsid = "H4130022"
         self.rules = pd.DataFrame()
 
     def clearData(self):
@@ -76,31 +77,35 @@ class Matrix():
 
     def login(self, username, password, site='niagara'):
         print('Logging in...')
-        if site == 'niagara':
-            matrix_url = self.niagara
-        self.driver.get(matrix_url)
-        self.waits.until(ec.visibility_of_element_located((By.XPATH,'//*[@id="clareity"]')))
-        userbox = self.driver.find_element(By.XPATH,'//*[@id="clareity"]')
+
+        matrix_url = matrix.baseurl
+        matrix.driver.get(matrix_url)
+        matrix.waits.until(ec.visibility_of_element_located((By.XPATH,'//*[@id="clareity"]')))
+        userbox = matrix.driver.find_element(By.XPATH,'//*[@id="clareity"]')
         userbox.click()
         time.sleep(0.5)
         userbox.send_keys(username)
         time.sleep(0.5)
-        passbox = self.driver.find_element(By.XPATH,'//*[@id="security"]')
+        passbox = matrix.driver.find_element(By.XPATH,'//*[@id="security"]')
 
         passbox.click()
         time.sleep(0.5)
         passbox.send_keys(password)
         time.sleep(0.5)
-        self.driver.find_element(By.XPATH,'//*[@id="loginbtn"]').click()
-        self.waits.until(ec.visibility_of_element_located((By.XPATH,'//*[@id="1253"]/img')))
+        matrix.driver.find_element(By.XPATH,'//*[@id="loginbtn"]').click()
+        matrix.waits.until(ec.visibility_of_element_located((By.XPATH,'//h4[text()="RAHB Matrix"]')))
+        matrix.driver.get('https://matrix.rahb.ca/Matrix')
+        matrix.waits.until(ec.visibility_of_element_located((By.XPATH,'//input[@id="ctl02_m_ucSpeedBar_m_tbSpeedBar"]')))
+        while True:
+            try:
+                matrix.driver.find_element(By.XPATH,'//div[text()="I\'ve Read This"]').click()
+            except:
+                break
         try:
             time.sleep(1)
-            # self.gotoHousePage(self.testmlsid)
-            self.driver.get('https://matrix.itsorealestate.ca/Matrix/MyMatrix')
+            matrix.gotoHousePage(matrix.testmlsid)
         except Exception as e:
-            self.driver.find_element(By.XPATH,'//span[text()="Continue"]').click()
-            time.sleep(1)
-            self.driver.get('https://matrix.itsorealestate.ca/Matrix/MyMatrix')
+            matrix.driver.find_element(By.XPATH,'//span[text()="Continue"]').click()
             # print(e)
         return 'Logged in'
 
@@ -110,18 +115,18 @@ class Matrix():
     def gotoHousePage(self,mlsid, refresh=False, target='main'):
         if refresh:
             self.info[target] = {'MLS':mlsid}    
-        self.driver.get('https://matrix.itsorealestate.ca/Matrix/RosterSearch')
-        self.driver.find_element(By.XPATH,'//*[@id="ctl01_m_ucSpeedBar_m_tbSpeedBar"]').send_keys(mlsid)
-        self.driver.find_element(By.XPATH,'//*[@id="ctl01_m_ucSpeedBar_m_lnkGo"]/span/i').click()
-        self.waits.until(ec.visibility_of_element_located((By.LINK_TEXT,mlsid)))
-        self.driver.find_element(By.LINK_TEXT,mlsid).click()
-        self.waits.until(ec.visibility_of_element_located((By.LINK_TEXT,'Listing')))
-        self.driver.find_element(By.XPATH,'//a[text()="Listing"]').click()
+        matrix.driver.get('https://matrix.rahb.ca/Matrix/Search')
+        matrix.driver.find_element(By.XPATH,'//*[@id="ctl01_m_ucSpeedBar_m_tbSpeedBar"]').send_keys(mlsid)
+        matrix.driver.find_element(By.XPATH,'//*[@id="ctl01_m_ucSpeedBar_m_lnkGo"]/span/i').click()
+        matrix.waits.until(ec.visibility_of_element_located((By.LINK_TEXT,mlsid)))
+        matrix.driver.find_element(By.LINK_TEXT,mlsid).click()
+        matrix.waits.until(ec.visibility_of_element_located((By.LINK_TEXT,'Listing')))
+        matrix.driver.find_element(By.XPATH,'//div[text()="Listing"]').click()
 
 
     def scrapListing(self, target='main'):
         # listing page
-        self.driver.find_element(By.XPATH,'//a[text()="Listing"]').click()
+        self.driver.find_element(By.XPATH,'//div[text()="Listing"]').click()
         for i,row in self.rules.dropna(subset = ['Xpaths']).loc[self.rules['Source'].apply(lambda x:'Matrix-listing' in str(x))].iterrows():
             print(row['Name'],'---------')
             try:
@@ -132,23 +137,11 @@ class Matrix():
         try:
             lotfront = self.driver.find_element(By.XPATH,"//*[starts-with(text(),'Lot') and contains(text(),'Front (Ft): ')]/following::span[1] ").text
             lotdepth = self.driver.find_element(By.XPATH,"//*[starts-with(text(),'Lot') and contains(text(),'Depth (Ft): ')]/following::span[1]").text
-            self.info[target]['Lot dimensions Matrix'] = f"{lotfront}'x{lotdepth}'"
-            try:
-                self.info[target]['Lot area fallback'] = float(lotfront) * float(lotdepth)
-            except:
-                self.info[target]['Lot area fallback'] ='not found in Matrix or GeoWarehouse'
+            self.info[target]['Lot dimensions Matrix'] = f'{lotfront} x {lotdepth}'
         except Exception as e:
             print(e)
             print('Lot Front/Depth not found')
             pass
-        try:
-            pin = self.driver.find_element(By.XPATH,"//*[starts-with(text(),'PIN: ')]/following::span[1]").text
-            self.info[target]['PIN'] = pin
-        except Exception as e:
-            print(e)
-            print('PIN not found')
-            pass
-        print('Listing scraped')   
         # self.driver.find_element(By.XPATH,'//span[text()="Garage & Parking: "]/following::td').text
 
         
@@ -189,40 +182,23 @@ class Matrix():
         histdf = pd.DataFrame(allrows).drop_duplicates()
         histdf['solddate'] = pd.to_datetime(histdf['solddate'])
         histdf['listdate'] = pd.to_datetime(histdf['listdate'])
-        self.info[target]['lastdate'] = max(histdf['solddate'].max(),histdf['listdate'].max())
-        histdf = histdf.loc[histdf['listdate']>= '2010-01-01']
         histdf = histdf.sort_values(by='solddate').reset_index(drop=True)
         # histdf = histdf[histdf['solddate'].dt.year >= datetime.now().year -10].reset_index(drop=True)
-        y1listed = histdf.loc[histdf['solddate'] > datetime.now() - timedelta(days=365),:]
-        if len(y1listed) > 0:
-            self.info[target]['Listed within 1 year'] = 'Yes'
-        else:
-            self.info[target]['Listed within 1 year'] = 'No'
-
         fullsentencs = 'The subject was listed '
         for i, row in histdf.iterrows():
-            status = row['status'].lower()
+            status = row['status']
             listdate = datetime.strftime(row['listdate'],'%b %d, %Y')
-            solddate = datetime.strftime(row['solddate'],'%b %d, %Y')
+            solddate = row['solddate']
             listprice = row['listprice']
             soldprice = row['soldprice']
             mlsnum = row['MLS']
-            if status == 'Closed': # Closed, Pending, Cancelled, Expired
-                text =  f' {listdate} for {listprice} and the listing sold on {solddate} at {soldprice} ({mlsnum}); '
-            elif status == 'Pending':
-                text =  f' {listdate} for {listprice} and the listing received a pending offer on {solddate} for {soldprice} ({mlsnum}); '
+            if status == 'Close':
+                text =  f'on {listdate} for {listprice} and the listing sold on {solddate} at {soldprice} (MLS# {mlsnum}); '
             else:
-                text =  f' {listdate} for {listprice} and the listing {status} on {solddate} ({mlsnum}); '
+                text =  f'on {listdate} for {listprice} and the listing expired on {solddate} (MLS# {mlsnum}); '
             fullsentencs += text
-        if fullsentencs.endswith('; '):
-                fullsentencs = fullsentencs[:-2] + '.'
-        lastlist = histdf.iloc[-1]
-        if lastlist['listdate'] < datetime.now() - timedelta(days=365) and lastlist['status'] in  ['Closed', 'Cancelled', 'Expired']:
-            self.info[target]['Currently listed'] = 'No'
-        else:
-            self.info[target]['Currently listed'] = 'Yes'
         
-        self.info[target]['Listing history'] = re.sub(r' +','',fullsentencs)
+        self.info[target]['Listing history'] = fullsentencs
         self.info[target]['historyDataFrame'] = histdf
 
         print('scraping history done')
@@ -292,15 +268,13 @@ class Matrix():
         current_url = self.driver.current_url 
         if not current_url.startswith('https://collaboration.geowarehouse.ca'):
             self.loginGeowarehouse()
-        if self.info[target].get('PIN'):
-            searchTerm = self.info[target]['PIN']
-        else:
-            addressline = self.info[target].get('Street address','').split(',')[0]
-            postalcode = self.info[target].get('Postal Code','')
-            searchTerm = f'{addressline}, {postalcode}'
-            if not postalcode:
-                print('GEOWAREHOUSE ERROE: run listings first to get address')
-                return
+        
+        addressline = self.info[target].get('Street address','').split(',')[0]
+        postalcode = self.info[target].get('Postal Code','')
+        searchTerm = f'{addressline}, {postalcode}'
+        if not postalcode:
+            print('GEOWAREHOUSE ERROE: run listings first to get address')
+            return
         self.driver.find_element(By.XPATH,'//input[@ng-model="searchText"]').clear()
         self.driver.find_element(By.XPATH,'//input[@ng-model="searchText"]').send_keys(searchTerm)
         self.driver.find_element(By.XPATH,'//input[@ng-model="searchText"]').send_keys(Keys.ENTER)
@@ -338,28 +312,14 @@ class Matrix():
             front = (re.findall('[\d,\.]+',front) + [''])[0]
             depth = (re.findall('[\d,\.]+',depth) + [''])[0]
             if front and depth:
-                self.info[target]['Lot dimensions short GW'] = f'{front}ftx{depth}ft'
-                self.info[target]['Lot dimensions short GW (formatted)'] = f"{front}'x{depth}'"
-                try:
-                    self.info[target]['Lot area fallback'] = float(front) * float(depth)
-                except Exception as e:
-                    pass
-            else:
-                self.info[target]['Lot dimensions short GW'] = 'not found'
+                self.info[target]['Lot dimensions short GW'] = f'{front} x {depth}' if (front and depth) else 'not found'
         except Exception as e:
             print('no lot dimensions short GW',e)
-
- 
 
         # tax year and value
         try:
             houseValues = self.driver.find_element(By.XPATH,'//div[contains(text(),"Assessed Value")]//parent:: div').text.split('\n')
-            assessed = houseValues[2].strip().replace('$','').replace(',','').strip()
-            try:
-                self.info[target]['Assessed value'] = int(assessed)
-            except:
-                self.info[target]['Assessed value'] = None
-            self.info[target]['Assessed value']
+            self.info[target]['Assessed Value'] = houseValues[2].strip().replace('$','')
             taxyear = (re.findall('\d{4}',houseValues[5]) + [''])[0]
             if taxyear:
                 self.info[target]['Tax year']  = taxyear
@@ -369,7 +329,7 @@ class Matrix():
 
         # lot dimensions long GW
         try:
-            self.info[target]['Lot dimensions long GW'] = self.driver.find_element(By.XPATH,'//div[@class="measurements"]').text.replace('Measurements:','').strip().replace(' ','')
+            self.info[target]['Lot dimensions long GW'] = self.driver.find_element(By.XPATH,'//div[@class="measurements"]').text.replace('Measurements:','').strip()
         except Exception as e:
             print('no lot dimensions long GW',e)
 
@@ -382,10 +342,8 @@ class Matrix():
                 acres = area/43560
             if acres >1:
                 self.info[target]['Lot area'] = f'{acres:.2f} acres'
-                self.info[target]['Lot area unit'] = 'acres'
             else:
                 self.info[target]['Lot area'] = f'{area:.2f} Sq.Ft. +/-'
-                self.info[target]['Lot area unit'] = 'Sq.Ft.'
         except Exception as e:
             print('no lot area',e)
 
@@ -394,25 +352,20 @@ class Matrix():
             salesdf = pd.read_html(self.driver.find_element(By.XPATH,'//table[@ng-show="salePresent"]/parent::div').get_attribute('innerHTML'))[0]
             salesdf['Sale Date'] = pd.to_datetime(salesdf['Sale Date'],errors='coerce')
             salesdfuse = salesdf.loc[salesdf['Sale Date']>='2010-01-01'].sort_values(by='Sale Date')
-            y3rows = salesdfuse.loc[salesdf['Sale Date']>=(datetime.now() - timedelta(days=365*3))]
-        except Exception as e:
-            print('no sales history',e)
-            return
-        if len(y3rows)>0:
-            self.info[target]['Sold within 3 years'] = 'Yes'
-        else:
-            self.info[target]['Sold within 3 years'] = 'No'
-        if len(salesdfuse)==0:
-            self.info[target]['Sales history'] = 'According to GeoWaharehouse, the subject has not been transferred in the last ten years.'
-        else:
-            salestext = 'According to GeoWarehouse, the subject was transferred ' 
+            salestext = 'According to GeoWarehouse, the subject was transferred' 
             for _, row in salesdfuse.iterrows():
                 date = row['Sale Date'].strftime('%b %d, %Y')
                 price = row['Sale Amount']
-                salestext += f' {date} for {price}; '
-            if salestext.endswith('; '):
-                salestext = salestext[:-2] + '.'
-            self.info[target]['Sale history'] = re.sub(r' +','',salestext)
+                salestext += f'on {date} for a price of {price}; '
+            self.info[target]['Sale history'] = salestext
+
+        except Exception as e:
+            print('no sales history',e)
+
+
+
+
+
         return
 
 
@@ -470,9 +423,10 @@ class Matrix():
 
 
 if __name__ == '__main__':
-    username = 'CA8074'
-    password = 'Henrycub1'
+    username = 'walshch1'
+    password = 'Spring2022H'
     matrix = Matrix()
+    matrix.startBrowser()
     matrix.login(username='',password='')
     matrix.gotoHousePage('40159781') # 40159781
     matrix.getMatrix(target='main')
