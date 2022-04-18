@@ -6,7 +6,7 @@ def addressHandel(info):
     city = (address.split(',') + [''])[1].strip()
     province = 'ON'
     postal = (['']+re.findall(r'[A-Z]\d[A-Z] \d[A-Z]\d',address.upper()))[-1]
-    city_province_postal = 'NOTL' if 'Niagara on the Lake' else city + ', ON ' + postal
+    city_province_postal = ('NOTL' if 'Niagara on the Lake' else city) + ', ON ' + postal
     info.update( {
         'addressraw':address,
         'Street address':street,

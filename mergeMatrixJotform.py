@@ -19,7 +19,7 @@ def merge_matrix_jotform(df_matrix, df_jotform):
         try:
             taxrate = float(taxrate)
             assessedValue = float(assessedValue)
-            df_matrix.loc[df_matrix['Name'] == 'Taxes', 'main'] = taxrate * assessedValue
+            df_matrix.loc[df_matrix['Name'] == 'Taxes', 'main'] = round(taxrate * assessedValue, 2)
         except:
             print('taxrate or assessedValue is not a number')
     df_jotform = df_jotform[['value']]

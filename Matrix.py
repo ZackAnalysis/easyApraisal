@@ -18,6 +18,7 @@ import pandas as pd
 import base64
 import importlib.resources as importlib_resources
 from datetime import datetime, timedelta
+import pickle
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -42,7 +43,9 @@ class Matrix():
             'comparable 6':{}
         }
         self.testmlsid = "40186898"
-        self.rules = pd.DataFrame()
+        # self.rules = pd.DataFrame()
+        rulefile = 'Output.xlsx'
+        self.rules = pd.read_excel(rulefile, sheet_name='rules', usecols=['Name','Source','Xpaths','Notes'])
 
     def clearData(self):
         self.info = {
@@ -66,8 +69,7 @@ class Matrix():
             print('https://chromedriver.chromium.org/downloads')
             return 'Please install chrome driver or check your Environment Variables settings'
             
-        rulefile = 'Output.xlsx'
-        self.rules = pd.read_excel(rulefile, sheet_name='rules', usecols=['Name','Source','Xpaths','Notes'])
+
         return 'Browser started'
 
     def testwiki(self, term):
@@ -222,7 +224,7 @@ class Matrix():
         else:
             self.info[target]['Currently listed'] = 'Yes'
         
-        self.info[target]['Listing history'] = re.sub(r' +','',fullsentencs)
+        self.info[target]['Listing history'] = re.sub(r' +',' ',fullsentencs)
         self.info[target]['historyDataFrame'] = histdf
 
         print('scraping history done')
@@ -274,7 +276,12 @@ class Matrix():
         self.scrapListing(target=target)
         self.scrapRooms(target=target)
         self.scrapHistory(target=target)
-        self.tranform(target=target)
+
+    def savepickle(self,mls=''):
+        today = datetime.strftime(datetime.now(),'_%Y%m%d_%H%M%S')
+        filename = f'tmpscrapingdata_{mls}{today}.pickle'
+        with open(filename, 'wb') as f:
+            pickle.dump(self.info, f)
 
     def loginGeowarehouse(self, target='main'):
         try:
@@ -314,11 +321,7 @@ class Matrix():
             print('ERROR: geowarehouse search failed, you can try to search manually',e)
 
 
-
-
-
     def scrapeGeowahrehouse(self, target='main'):
-
         # legal description
         try:
             if self.driver.find_element(By.XPATH,'//a[@ng-click="morelegaldesc()"]').text == 'more':
@@ -412,7 +415,7 @@ class Matrix():
                 salestext += f' {date} for {price}; '
             if salestext.endswith('; '):
                 salestext = salestext[:-2] + '.'
-            self.info[target]['Sale history'] = re.sub(r' +','',salestext)
+            self.info[target]['Sale history'] = re.sub(r' +',' ',salestext)
         return
 
 

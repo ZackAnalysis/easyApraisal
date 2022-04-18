@@ -40,10 +40,10 @@ def jotform(jotForm, dffinal):
     dfdict['Basement'] = ', '.join([x for x in [basementfull,basement] if x])
 
     #bedrooms ? Bedroom - basement
-    bedrooms = jotForm.loc[jotForm['Xpaths'].str.contains('Bedroom -'),'value'].values
-    nbedrooms = len([b for b in bedrooms if b])
+    # bedrooms = jotForm.loc[jotForm['Xpaths'].str.contains('Bedroom -'),'value'].values
+    # nbedrooms = len([b for b in bedrooms if b])
     # Note: to check
-    dfdict['Bedrooms'] = nbedrooms
+    # dfdict['Bedrooms'] = nbedrooms
 
 
     #bathrooms ? Bathroom - basement
@@ -142,9 +142,13 @@ def jotform(jotForm, dffinal):
 
     # Effective age/economic life
     effectiveAge = jotForm.loc[jotForm['Xpaths']=='Effective age','value'].values[0]
-    dfdict['Effective age/economic life'] = f'{effectiveAge}/60'
-    dfdict['Effictive age/economic life %'] = '{:.1f}'.format(effectiveAge/60 * 100)
-
+    try:
+        effectiveAge = int(effectiveAge)
+        dfdict['Effective age/economic life'] = f'{effectiveAge}/60'
+        dfdict['Effictive age/economic life %'] = '{:.1f}'.format(effectiveAge/60 * 100)
+        dfdict['Economic life'] = 60 - effectiveAge
+    except:
+        print(f'{effectiveAge} is not an integer')
 
     for k,v in dfdict.items():
         if isinstance(v,str):
@@ -182,7 +186,7 @@ def jotform(jotForm, dffinal):
                 feature = feature.strip()
                 value = value.strip()
                 if feature == 'Pieces' and roomtype == 'PARTIAL BATH':
-                    if int(value) >= 3:
+                    if value and int(value) >= 3:
                         newroom['roomtype'] = 'FULL BATH'
                 if feature == 'Room type' and roomtype == 'OTHER':
                     newroom['roomtype'] = value
@@ -202,7 +206,7 @@ def jotform(jotForm, dffinal):
 
 
     alllroomsdf = pd.DataFrame(allrooms)
-    levelorder = {'MAIN':1,'SECONDARY':3,'UPPER':2,'EXTRA LEVEL':4,'BASEMENT':10,'LOWER':11}
+    levelorder = {'MAIN':1,'SECONDARY':2,'SECOND':3,'UPPER':4,'EXTRA LEVEL':5,'BASEMENT':10,'LOWER':11}
 
     alllroomsdf['levelorder'] = alllroomsdf['level'].map(levelorder).fillna(8)
     alllroomsdf.sort_values(by=['levelorder','roomtype'],inplace=True)
@@ -219,7 +223,7 @@ def jotform(jotForm, dffinal):
 
     abovedf = alllroomsdf.loc[~alllroomsdf['level'].isin(['BASEMENT','LOWER'])].reset_index(drop=True)
     basementdf = alllroomsdf.loc[alllroomsdf['level'].isin(['BASEMENT','LOWER'])].reset_index(drop=True)
-
+    dfdict['Bedrooms'] = len(abovedf.query('roomtype == "BEDROOMS"'))
 
     entrances = jotForm.loc[jotForm['Xpaths'].str.contains('entrance', False)].reset_index()
     entrances['Xpaths'] = entrances['Xpaths'].str.replace('entrances','').str.upper().str.strip()
@@ -244,8 +248,8 @@ def jotform(jotForm, dffinal):
 
         for _, row in entrances.iterrows():
             level = row['Xpaths']
-            if level in ['BASEMENT','LOWER']:
-                continue
+            # if level in ['BASEMENT','LOWER']:
+            #     continue
             if level in roomcounts['level'].values:
                 roomcounts.loc[roomcounts['level']==level,'ENTRANCES'] = row['value']
             else:
@@ -272,7 +276,7 @@ def jotform(jotForm, dffinal):
                 continue
             if pd.isna(row[key]):
                 continue
-            if key in ['Windows','Closets','Features']:
+            if key in ['Windows','Closets','Features','Appliances']:
                 descmidel += row[key]+', '
                 continue
             descmidel += row[key] + ' '+key+', '
@@ -294,9 +298,12 @@ def jotform(jotForm, dffinal):
         roomdesc = re.sub(r',[, ]*',', ',roomdesc)
         return roomdesc
 
-    def tofloordesc(floor,abovedf, aboveentrance, basementtype='' ):
+    def tofloordesc(floor,abovedf, aboveentrance, basementtype='', floorname=None):
         if floor != 'BASEMENT':
             basementtype =''
+        if floorname:
+            abovedf['level'] = abovedf['level'].replace(floor, floorname)
+            floor = floorname
         floordesc = f'{basementtype} {floor} floor comprises'.capitalize()
         floorentry = aboveentrance.loc[aboveentrance['Xpaths']==floor]
         if len(floorentry)>0 and floorentry["value"].values[0]:
@@ -366,15 +373,18 @@ def jotform(jotForm, dffinal):
     roomdesc += '\n\n'
     checkfloor = []
     for floor in abovedf['level'].values:
+        floorname = None
         if floor in checkfloor:
             continue
         if floor == 'EXTRA LEVEL':
-            floor = jotForm.loc[jotForm['Xpaths']=='Floor name','value'].values[0]
-        roomdesc += 'The' + tofloordesc(floor,abovedf, aboveentrance)
+            floorname = jotForm.loc[jotForm['Xpaths']=='Floor name','value'].values[0]
+            checkfloor.append(floorname)
+        roomdesc += ' The' + tofloordesc(floor,abovedf, aboveentrance,floorname=floorname)
         checkfloor.append(floor)
 
     if roomdesc:
-        roomdesc = re.sub(r',[ ,]*',', ', roomdesc)
+        roomdesc = re.sub(r' +',' ',roomdesc)
+        roomdesc = re.sub(r',[ ,]*',', ', roomdesc).strip()
         dfdict['Building improvements'] = roomdesc
             
 
@@ -406,14 +416,19 @@ def jotform(jotForm, dffinal):
     siteimprov = ''
     EXTERIOR_IMPROVEMENTS_FRONT = jotForm.loc[jotForm['Xpaths']=='Exterior improvements front','value'].values[0]
     if not pd.isna(EXTERIOR_IMPROVEMENTS_FRONT) and EXTERIOR_IMPROVEMENTS_FRONT:
+        FENCE_MATERIAL_FRONT = jotForm.loc[jotForm['Xpaths']=='Fence material','value'].values[0]
+        if FENCE_MATERIAL_FRONT:
+            EXTERIOR_IMPROVEMENTS_FRONT = re.sub(r'fence-(.*?)[\n ]',rf'fence-\1 ({FENCE_MATERIAL_FRONT}), ',EXTERIOR_IMPROVEMENTS_FRONT, flags=re.I)
         siteimprov += f"Front: {EXTERIOR_IMPROVEMENTS_FRONT}." 
 
     EXTERIOR_IMPROVEMENTS_REAR = jotForm.loc[jotForm['Xpaths']=='Exterior improvements rear','value'].values[0]
     if not pd.isna(EXTERIOR_IMPROVEMENTS_REAR) and EXTERIOR_IMPROVEMENTS_REAR:
+        FENCE_MATERIAL_REAR = jotForm.loc[jotForm['Xpaths']=='Fence material.1','value'].values[0]
+        if FENCE_MATERIAL_REAR:
+            EXTERIOR_IMPROVEMENTS_REAR = re.sub(r'fence-(.*?)[\n ]',rf'fence-\1 ({FENCE_MATERIAL_REAR}), ',EXTERIOR_IMPROVEMENTS_REAR, flags=re.I)
         siteimprov += f" Rear: {EXTERIOR_IMPROVEMENTS_REAR}."
-    FENCE_MATERIAL = jotForm.loc[jotForm['Xpaths']=='Fence material','value'].values[0]
-    if FENCE_MATERIAL:
-        siteimprov = re.sub(r'fence-(.*?)[\n ]',rf'fence-\1 ({FENCE_MATERIAL}), ',siteimprov, flags=re.I)
+
+    
 
     SHED_FEATURES = jotForm.loc[jotForm['Xpaths']=='Shed features','value'].values[0]
     SHED_ELECTRICAL_PANEL = jotForm.loc[jotForm['Xpaths']=='Shed electrical panel','value'].values[0]
@@ -454,7 +469,6 @@ If = Condominium, write: As this appraisal applies to a condominium, the value e
     # constants
     dfdict['Insulation info source'] = "Building code"
     dfdict['Plumbing info source'] = "Building code"
-    dfdict['Economic life'] = 60
 
     dfdict['Rent reconciliation'] = "Given the subject's size and condition, the estimated rental range of $ #  to $ #, excluding utilities, is reasonable and supportable if the entire property is rented."
     dfdict['Rent comparison comment'] ="""The days on market for comparables 1-3 ranged from # days to # days, indicating that there is stable demand in the area for rentals of similar type of property.
@@ -495,6 +509,6 @@ No locational adjustment has been made these properties have similar neighbourho
 if __name__ == '__main__':
     dffinal = pd.read_excel('Output.xlsx', sheet_name='rules', usecols=['Name','Source','Xpaths','Notes'])
 
-    jotForm = pd.read_excel('RESIDENTIAL_2_STOREY_12022-04-05_15_47_10.xlsx')
+    jotForm = pd.read_excel('RESIDENTIAL_2_STOREY_12022-04-17_17_29_44.xlsx')
     dffinal, roomcounts, basementcounts = jotform(jotForm, dffinal)
     print(dffinal)

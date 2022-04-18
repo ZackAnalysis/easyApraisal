@@ -56,6 +56,8 @@ def getdata():
         return 'house page reached'
     if job == 'matrix':
         matrix.getMatrix(target)
+        matrix.savepickle(mls)
+        matrix.tranform(target)
         drivematerial = request.form.get('drivematerial')
         CONDITION = request.form.get('interiorCondition')
         RECENCY = '#ERRORinHistroy'
@@ -80,7 +82,10 @@ def getdata():
                 print('bad date',e)
         matrix.info[target]['Setting'] = setting
         if target != 'main':
+            PROXIMITY = 'nearby'
             matrix.info[target]['CompareStates'] = f"{target} is a {RECENCY}, nearby sale and its interior condition is {CONDITION} to the subject {EXPLANATION}. The property has"
+
+            f"{target} is a {RECENCY}, {PROXIMITY} sale and its interior condition is {CONDITION} to the subject in {EXPLANATION}. Property has"
     if job == 'gotoGeowharehousePage':
         matrix.gotoGeowharehousePage(target)
         return 'geowarehouse page reached'
@@ -102,8 +107,19 @@ def combine():
     from mergeMatrixJotform import merge_matrix_jotform
     from jotform import jotform
     global matrix
-    matrixdf = matrix.to_frame()
-    # matrixfile = request.files.get('matrixfile').read()
+    try:
+        matrixdf = matrix.to_frame()
+        compares = [matrix.info[t]['CompareStates'] for t in matrix.info  if matrix.info[t]['CompareStates']]
+        comparetext = '\n'.join(compares)
+        if comparetext:
+            matrix.info['main']['CompareStates'] = f'''Comparable sales examined offered good overall comparability with the subject and were chosen from similar style properties that sold recently in the subject's market area. They are similarly improved in terms of design, utility, quality of improvements and accommodation. To equate the subject property to the sales presented, an adjustment process has been adopted. Comparables have been adjusted for factors such as differences in quality and condition of interior improvements, liveable floor area (LFA), bathroom facilities, and parking facilities, where applicable. Due to lack of similar sale comparables, an expanded area and sale time search have been conducted. A time adjustment as per HPI has been applied.
+
+{comparetext}
+
+No locational adjustment has been made these properties have similar neighbourhood amenities. The comparable LFA has a range is # SqFt to # SqFt. The unadjusted values ranged from $ # to $ # and the adjusted values ranged from $ # to $ # . Given the subject's size, location, and condition, equal weight is accorded to the comparables after adjustments for variances identified. According to consideration of this appraisal, the subject's final estimated value of $ # is considered to be supported.'''
+        # matrixfile = request.files.get('matrixfile').read()
+    except Exception as e:
+        matrixdf = pd.DataFrame()
 
     jotformfile = request.files.get('jotformfile')
     if jotformfile:
